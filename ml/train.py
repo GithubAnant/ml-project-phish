@@ -289,7 +289,8 @@ def run_unsupervised(X_matrix: np.ndarray, y_true: np.ndarray) -> dict:
         "dbscan_n_clusters": int(n_db_clusters),
         "dbscan_noise_fraction": float(np.mean(db_labels == -1)),
         "note": "Unsupervised labels do not match phishing ground truth directly; used for structure exploration.",
-        "phishing_rate_in_sample": float(yt.mean()),
+        "label1_rate_in_sample": float(yt.mean()),  # PhiUSIIL: 1=benign
+        "note_label": "PhiUSIIL label 1=legitimate, 0=phishing",
     }
 
 
@@ -339,7 +340,7 @@ def save_explainability(
         if hasattr(model, "predict_proba"):
             explainer = shap.Explainer(model.predict_proba, X_t)
             sv = explainer(X_t)
-            # class 1 (phishing)
+            # class 1 = legitimate/benign in PhiUSIIL; class 0 = phishing
             vals = np.abs(sv.values[:, :, 1]).mean(axis=0)
             shap_payload = {"model": name, "track": track, "mean_abs_shap_class1": vals.tolist()}
             (out_dir / f"shap_{track}_{name.replace(' ', '_')}.json").write_text(
