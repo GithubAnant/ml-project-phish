@@ -33,7 +33,13 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 from sklearn.mixture import GaussianMixture
-from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
+from sklearn.model_selection import (
+    GroupShuffleSplit,
+    StratifiedGroupKFold,
+    StratifiedKFold,
+    cross_validate,
+    train_test_split,
+)
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
@@ -43,7 +49,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.inspection import permutation_importance
 
 from ml.data import load_dataset, prepare_full_features, prepare_url_only
-from ml.url_features import URLFeatureExtractor
+from ml.url_features import URLFeatureExtractor, extract_url_features
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -145,15 +151,16 @@ def get_supervised_models(track: str) -> dict:
         "LogisticRegression (baseline)": LogisticRegression(
             max_iter=500, random_state=RANDOM_STATE, n_jobs=-1
         ),
-        "kNN": KNeighborsClassifier(n_neighbors=11, weights="distance", n_jobs=-1),
+        "kNN": KNeighborsClassifier(n_neighbors=15, weights="distance", n_jobs=-1),
         "DecisionTree": DecisionTreeClassifier(
-            max_depth=18, min_samples_leaf=20, random_state=RANDOM_STATE
+            max_depth=10, min_samples_leaf=50, random_state=RANDOM_STATE
         ),
         "LinearSVM": LinearSVC(max_iter=3000, random_state=RANDOM_STATE),
         "RandomForest (OOB)": RandomForestClassifier(
-            n_estimators=120,
-            max_depth=20,
-            min_samples_leaf=5,
+            n_estimators=80,
+            max_depth=12,
+            min_samples_leaf=20,
+            max_features="sqrt",
             oob_score=True,
             random_state=RANDOM_STATE,
             n_jobs=-1,
@@ -186,7 +193,7 @@ def make_pipeline(preprocess, estimator) -> Pipeline:
     return Pipeline([("preprocess", preprocess), ("model", estimator)])
 
 
-def evaluate_model(pipe, X_train, y_train, X_test, y_test, cv) -> dict:
+def evaluate_model(pipe, X_train, y_train, X_test, y_test, cv, groups_train=None) -> dict:
     scoring = {
         "accuracy": "accuracy",
         "precision": "precision",
@@ -195,7 +202,14 @@ def evaluate_model(pipe, X_train, y_train, X_test, y_test, cv) -> dict:
         "roc_auc": "roc_auc",
     }
     cv_res = cross_validate(
-        pipe, X_train, y_train, cv=cv, scoring=scoring, n_jobs=-1, error_score="raise"
+        pipe,
+        X_train,
+        y_train,
+        cv=cv,
+        scoring=scoring,
+        n_jobs=-1,
+        error_score="raise",
+        groups=groups_train,
     )
     pipe.fit(X_train, y_train)
     y_pred = pipe.predict(X_test)
@@ -354,7 +368,8 @@ def write_experiments_table(all_results: list[dict]) -> None:
             "",
             "## Notes",
             "",
-            "- Stratified 80/20 hold-out test set; CV is StratifiedKFold k=5 on training split only.",
+            "- Stratified 80/20 hold-out test set with **domain grouping** (no shared host between train & test).",
+            "- CV is StratifiedGroupKFold k=5 on the training split (URL & full tracks).",
             "- Full-feature track excludes post-fetch page/HTML signals to limit label leakage.",
             "- URL-only track uses features computed solely from the URL string (production/demo path).",
             "- Target: strong, realistic generalization — test accuracy intentionally not tuned toward 100%.",
@@ -376,7 +391,7 @@ def write_experiments_table(all_results: list[dict]) -> None:
 def stratified_sample(df: pd.DataFrame, max_rows: int) -> pd.DataFrame:
     if len(df) <= max_rows:
         return df
-    _, sample = train_test_split(
+    sample, _ = train_test_split(
         df,
         train_size=max_rows,
         stratify=df["label"],
@@ -385,27 +400,41 @@ def stratified_sample(df: pd.DataFrame, max_rows: int) -> pd.DataFrame:
     return sample.reset_index(drop=True)
 
 
-def train_track(track: str, df: pd.DataFrame, cv) -> tuple[list[dict], dict | None]:
+def domain_group_from_url(url: str) -> str:
+    from urllib.parse import urlparse
+
+    raw = str(url).strip()
+    host = urlparse(raw if "://" in raw else f"http://{raw}").netloc.lower()
+    return host.split(":")[0] or raw
+
+
+def train_track(track: str, df: pd.DataFrame, cv, cv_groups=None) -> tuple[list[dict], dict | None]:
     results: list[dict] = []
     best_row = None
     best_pipe = None
     best_score = -1.0
+    groups_train = None
 
     if track == "full":
         X, y = prepare_full_features(df)
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_STATE
-        )
+        groups = df.loc[X.index, "Domain"].astype(str)
+        gss = GroupShuffleSplit(n_splits=1, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+        train_idx, test_idx = next(gss.split(X, y, groups))
+        X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+        y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+        groups_train = groups.iloc[train_idx]
         preprocess = build_full_pipeline(X_train)
         unsupervised_matrix = None
     else:
         urls, y = prepare_url_only(df)
-        u_train, u_test, y_train, y_test = train_test_split(
-            urls, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_STATE
-        )
-        X_train, X_test = u_train, u_test
+        groups = urls.map(domain_group_from_url)
+        gss = GroupShuffleSplit(n_splits=1, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+        train_idx, test_idx = next(gss.split(urls, y, groups))
+        X_train, X_test = urls.iloc[train_idx], urls.iloc[test_idx]
+        y_train, y_test = y.iloc[train_idx], y.iloc[test_idx]
+        groups_train = groups.iloc[train_idx]
         preprocess = URLFeatureExtractor()
-        unsupervised_matrix = preprocess.fit_transform(u_train)
+        unsupervised_matrix = preprocess.fit_transform(X_train)
 
     models = get_supervised_models(track)
 
@@ -413,7 +442,9 @@ def train_track(track: str, df: pd.DataFrame, cv) -> tuple[list[dict], dict | No
         append_build_log(f"Training `{name}` on {track} track…")
         pipe = make_pipeline(clone(preprocess), clone(est))
         try:
-            metrics = evaluate_model(pipe, X_train, y_train, X_test, y_test, cv)
+            metrics = evaluate_model(
+                pipe, X_train, y_train, X_test, y_test, cv, groups_train=groups_train
+            )
         except Exception as exc:
             append_build_log(f"Model {name} failed on {track}: {exc}")
             continue
@@ -455,7 +486,7 @@ def main() -> None:
     df = stratified_sample(df, MAX_ROWS)
     append_build_log(f"Using stratified sample of {len(df)} rows (PHISHGUARD_MAX_ROWS={MAX_ROWS}).")
 
-    cv = StratifiedKFold(n_splits=N_SPLITS, shuffle=True, random_state=RANDOM_STATE)
+    cv = StratifiedGroupKFold(n_splits=N_SPLITS, shuffle=True, random_state=RANDOM_STATE)
     all_results: list[dict] = []
 
     for track in ("url_only", "full"):
