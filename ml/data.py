@@ -64,8 +64,10 @@ def prepare_full_features(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     ]
     X = df[cols].copy()
     for col in X.columns:
-        if X[col].dtype == object:
+        if X[col].dtype in ("object", "string", str):
             X[col] = X[col].astype(str)
+        else:
+            X[col] = pd.to_numeric(X[col], errors="coerce")
     return X, y
 
 

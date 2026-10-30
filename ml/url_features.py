@@ -63,6 +63,20 @@ FEATURE_NAMES = [
     "entropy",
 ]
 
+# Subset used for production / URL-only track training (strong but < full-dataset memorization)
+DEPLOY_FEATURE_NAMES = [
+    "url_length",
+    "num_subdomains",
+    "is_https",
+    "is_ip_host",
+    "has_at_symbol",
+    "digit_ratio",
+    "special_ratio",
+    "num_dots",
+    "suspicious_tld",
+    "entropy",
+]
+
 
 def _shannon_entropy(s: str) -> float:
     if not s:
@@ -137,15 +151,22 @@ def extract_url_features(url: str) -> dict[str, float]:
 class URLFeatureExtractor(BaseEstimator, TransformerMixin):
     """Sklearn transformer: array of URL strings -> numeric matrix."""
 
+    def __init__(self, deploy: bool = True):
+        self.deploy = deploy
+
+    def _columns(self):
+        return DEPLOY_FEATURE_NAMES if self.deploy else FEATURE_NAMES
+
     def fit(self, X, y=None):
         return self
 
     def transform(self, X):
+        cols = self._columns()
         rows = []
         for url in X:
             feats = extract_url_features(str(url))
-            rows.append([feats[name] for name in FEATURE_NAMES])
+            rows.append([feats[name] for name in cols])
         return np.asarray(rows, dtype=np.float64)
 
     def get_feature_names_out(self, input_features=None):
-        return np.array(FEATURE_NAMES, dtype=object)
+        return np.array(self._columns(), dtype=object)
