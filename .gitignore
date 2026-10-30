@@ -1,0 +1,16 @@
+data/*.csv
+data/*.zip
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+node_modules/
+web/.next/
+web/out/
+models/*.joblib
+reports/*
+!reports/.gitkeep
+*.egg-info/
+.DS_Store
+.env
+.env.local
