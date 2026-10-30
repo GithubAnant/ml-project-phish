@@ -1,0 +1,56 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  background: #000;
+  color: #ededed;
+}
+
+body {
+  margin: 0;
+  width: 320px;
+}
+
+main {
+  padding: 14px;
+}
+
+h1 {
+  font-size: 16px;
+  margin: 0 0 8px;
+}
+
+#status {
+  font-size: 11px;
+  color: #888;
+  word-break: break-all;
+}
+
+.verdict {
+  font-weight: 600;
+  margin: 10px 0;
+}
+
+.verdict.bad {
+  color: #ee0000;
+}
+
+.verdict.good {
+  color: #50e3c2;
+}
+
+.verdict.warn {
+  color: #f5a623;
+}
+
+ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.hint {
+  font-size: 11px;
+  color: #666;
+  margin-top: 12px;
+}
