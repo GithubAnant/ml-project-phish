@@ -1,14 +1,17 @@
 import type { Metadata } from 'next';
+import { GeistMono } from 'geist/font/mono';
+import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'PhishGuard — URL Risk Scanner',
-  description: 'Check URLs with the URL-only PhiUSIIL-trained model',
+  title: 'URLSentinel — URL risk',
+  description: 'URL phishing scanner — PhiUSIIL URL-only model.',
+  applicationName: 'URLSentinel',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <body>{children}</body>
     </html>
   );

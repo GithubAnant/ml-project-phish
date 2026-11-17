@@ -1,39 +1,39 @@
 {
   "best_model": "kNN",
   "test_metrics": {
-    "cv_accuracy_mean": 0.9680374586633398,
-    "cv_accuracy_std": 0.0011655242800669183,
-    "cv_f1_mean": 0.9723408949244787,
-    "cv_f1_std": 0.0009773843159203502,
-    "test_accuracy": 0.968517745302714,
-    "test_precision": 0.96355517142034,
+    "cv_accuracy_mean": 0.9679541730454992,
+    "cv_accuracy_std": 0.0011360208685016302,
+    "cv_f1_mean": 0.9722707089771792,
+    "cv_f1_std": 0.0009542429170161636,
+    "test_accuracy": 0.9686012526096034,
+    "test_precision": 0.9636939922201412,
     "test_recall": 0.9817995009540584,
-    "test_f1": 0.9725917848055252,
-    "test_roc_auc": 0.9877997217185074,
+    "test_f1": 0.972662498182347,
+    "test_roc_auc": 0.9878015415181894,
     "confusion_matrix": [
       [
-        4909,
-        253
+        4910,
+        252
       ],
       [
         124,
         6689
       ]
     ],
-    "classification_report": "              precision    recall  f1-score   support\n\n           0     0.9754    0.9510    0.9630      5162\n           1     0.9636    0.9818    0.9726      6813\n\n    accuracy                         0.9685     11975\n   macro avg     0.9695    0.9664    0.9678     11975\nweighted avg     0.9686    0.9685    0.9685     11975\n"
+    "classification_report": "              precision    recall  f1-score   support\n\n           0     0.9754    0.9512    0.9631      5162\n           1     0.9637    0.9818    0.9727      6813\n\n    accuracy                         0.9686     11975\n   macro avg     0.9695    0.9665    0.9679     11975\nweighted avg     0.9687    0.9686    0.9686     11975\n"
   },
   "unsupervised": {
     "pca_explained_variance_top10": 1.0,
     "kmeans_best_k": 2,
     "kmeans_silhouette_by_k": {
-      "2": 0.9624043916352885,
-      "3": 0.478592113257458,
-      "4": 0.4641097098417583,
-      "5": 0.4494333967991643,
-      "6": 0.4506586700176042,
-      "7": 0.40815391388699
+      "2": 0.9624043916352699,
+      "3": 0.4785921132570461,
+      "4": 0.4641097098413156,
+      "5": 0.449433396798697,
+      "6": 0.45065867001731313,
+      "7": 0.4081539138864548
     },
-    "kmeans_best_silhouette": 0.9624043916352885,
+    "kmeans_best_silhouette": 0.9624043916352699,
     "gmm_n_components": 2,
     "dbscan_n_clusters": 8,
     "dbscan_noise_fraction": 0.064,

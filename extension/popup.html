@@ -3,16 +3,62 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>PhishGuard</title>
+    <title>URLSentinel</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main>
-      <h1>PhishGuard</h1>
-      <p id="status">Loading…</p>
-      <p id="verdict" class="verdict"></p>
+      <header class="head">
+        <div class="brand-row">
+          <img src="logo.svg" width="26" height="26" alt="" />
+          <h1>URLSentinel</h1>
+        </div>
+      </header>
+
+      <form id="scan-form" class="scan-form">
+        <label for="url-input" class="scan-label">Check a URL</label>
+        <div class="scan-row">
+          <input
+            id="url-input"
+            type="text"
+            inputmode="url"
+            spellcheck="false"
+            placeholder="Paste or type a link…"
+            autocomplete="off"
+          />
+          <button type="submit" id="scan-btn" class="btn-primary">Scan</button>
+        </div>
+      </form>
+
+      <p id="target" class="target hidden" aria-live="polite"></p>
+
+      <div id="risk-bar-wrap" class="hidden">
+        <div class="risk-label">
+          <span id="band-label">—</span>
+          <span id="risk-pct" class="mono">—</span>
+        </div>
+        <div class="risk-track"><div id="risk-fill" class="risk-fill"></div></div>
+      </div>
+
+      <p id="verdict" class="verdict">Paste a URL above to check if it looks malicious.</p>
       <ul id="reasons"></ul>
-      <p class="hint">Ensure the FastAPI server is running on port 8000.</p>
+
+      <div class="tab-row">
+        <button type="button" id="use-tab" class="btn-sm" title="Use active tab URL">Use current tab</button>
+        <button type="button" id="audit-page" class="btn-sm">Audit this page</button>
+      </div>
+
+      <details class="more">
+        <summary>Page options</summary>
+        <label class="check-row">
+          <input id="hover-links" type="checkbox" checked />
+          Hover preview on links
+        </label>
+        <label class="check-row">
+          <input id="warn-click" type="checkbox" />
+          Confirm before risky clicks
+        </label>
+      </details>
     </main>
     <script src="popup.js"></script>
   </body>

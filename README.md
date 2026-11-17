@@ -1,4 +1,4 @@
-# PhishGuard
+# URLSentinel
 
 End-to-end phishing URL detection on the [PhiUSIIL Phishing URL dataset](https://archive.ics.uci.edu/dataset/967/phiusiil+phishing+url+dataset) (UCI id **967**). Two modeling tracks:
 
@@ -13,17 +13,13 @@ End-to-end phishing URL detection on the [PhiUSIIL Phishing URL dataset](https:/
 bash scripts/setup.sh
 ```
 
-Then in two terminals:
+Or one terminal:
 
 ```bash
-# API (URL-only model)
-python3 -m uvicorn api.main:app --host 127.0.0.1 --port 8000 --reload
-
-# Web UI (Geist-style dark theme)
-cd web && npm run dev
+bash scripts/run_demo.sh
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) (API on `http://127.0.0.1:8000`).
 
 ## Train models
 
@@ -36,8 +32,6 @@ Artifacts:
 
 - `models/url_only_best.joblib` — best URL-only pipeline (joblib)
 - `models/training_summary.json` — test metrics & unsupervised summary
-- `EXPERIMENTS.md` — comparison table
-- `BUILD_LOG.md` — timestamped run log
 - `reports/` — permutation importance & SHAP JSON
 
 Evaluation protocol:
@@ -48,15 +42,14 @@ Evaluation protocol:
 
 Models compared: majority class & logistic regression baselines; kNN; decision tree; linear SVM; random forest (OOB); AdaBoost; gradient boosting; XGBoost/LightGBM when installed; MLP with early stopping. Unsupervised: PCA, k-means + silhouette, GMM, DBSCAN.
 
-Explainability: permutation importance and SHAP (see `reports/`). Limitations and responsible ML notes are in `EXPERIMENTS.md`.
+Explainability: permutation importance and SHAP (see `reports/`).
 
 ## Chrome extension
 
-See [extension/README.md](extension/README.md). Load unpacked from `extension/` while the API runs on port 8000.
+`chrome://extensions` → Developer mode → **Load unpacked** → `extension/` (API on port 8000).
 
 ## Demo assets
 
-- [demo/test_urls.md](demo/test_urls.md) — lookalikes, Safe Browsing test URLs, sample dataset strings
 - [demo/pages/](demo/pages/) — harmless local HTML pages mimicking phishing copy (no exfiltration)
 
 ## Project layout

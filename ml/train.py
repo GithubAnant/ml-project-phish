@@ -188,6 +188,10 @@ def get_supervised_models(track: str) -> dict:
         models["DecisionTree"] = DecisionTreeClassifier(
             max_depth=12, min_samples_leaf=30, random_state=RANDOM_STATE
         )
+    filter_names = os.environ.get("PHISHGUARD_MODELS", "").strip()
+    if filter_names:
+        keep = {n.strip() for n in filter_names.split(",") if n.strip()}
+        models = {k: v for k, v in models.items() if k in keep}
     return models
 
 
